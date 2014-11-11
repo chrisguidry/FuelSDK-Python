@@ -5,7 +5,7 @@ with open('README.md') as f:
 
 setup(
     version='0.9.3',
-    name='FuelSDK',
+    name='FuelSDK-sbo',
     description='ExactTarget Fuel SDK for Python',
     long_description=readme,
     author='ExactTarget',
@@ -17,7 +17,7 @@ setup(
     install_requires=[
         'pyjwt==0.1.9',
         'requests==2.2.1',
-        'suds==0.4',
+        'suds==0.4.1',
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
