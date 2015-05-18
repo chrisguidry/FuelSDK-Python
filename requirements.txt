@@ -1,5 +1,5 @@
 PyJWT==0.3.2
 distribute==0.7.3
-requests==2.2.1
-suds==0.4
+requests==2.5.1
+suds==0.4.1
 wsgiref==0.1.2
