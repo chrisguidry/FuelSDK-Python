@@ -1,6 +1,9 @@
 import os
 import logging
-import ConfigParser
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 import time
 import json
 
@@ -31,7 +34,7 @@ class ET_Client(object):
     authObj = None
     soap_client = None
     auth_url = None
-        
+
     ## get_server_wsdl - if True and a newer WSDL is on the server than the local filesystem retrieve it
     def __init__(self, get_server_wsdl = False, debug = False, params = None):
         self.debug = debug
@@ -101,7 +104,7 @@ class ET_Client(object):
 
         self.wsdl_file_url = self.load_wsdl(wsdl_server_url, wsdl_file_local_location, get_server_wsdl)
 
-        ## get the JWT from the params if passed in...or go to the server to get it             
+        ## get the JWT from the params if passed in...or go to the server to get it
         if(params is not None and 'jwt' in params):
             decodedJWT = jwt.decode(params['jwt'], self.appsignature)
             self.authToken = decodedJWT['request']['user']['oauthToken']
@@ -126,8 +129,8 @@ class ET_Client(object):
         else:
            path = os.path.dirname(os.path.abspath(__file__))
            file_location = os.path.join(path, 'ExactTargetWSDL.xml')
-        file_url = 'file:///' + file_location 
-        
+        file_url = 'file:///' + file_location
+
         if not os.path.exists(file_location) or os.path.getsize(file_location) == 0:   #if there is no local copy or local copy is empty then go get it...
             self.retrieve_server_wsdl(wsdl_url, file_location)
         elif get_server_wsdl:
@@ -137,9 +140,9 @@ class ET_Client(object):
                 file_wsdl_updated = time.gmtime(os.path.getmtime(file_location))
                 if server_wsdl_updated > file_wsdl_updated:
                     self.retrieve_server_wsdl(wsdl_url, file_location)
-            
+
         return file_url
-            
+
 
     def retrieve_server_wsdl(self, wsdl_url, file_location):
         """
@@ -148,14 +151,14 @@ class ET_Client(object):
         r = requests.get(wsdl_url)
         f = open(file_location, 'w')
         f.write(r.text)
-        
+
 
     def build_soap_client(self):
-        if self.endpoint is None: 
+        if self.endpoint is None:
             self.endpoint = self.determineStack()
-        
-        self.authObj = {'oAuth' : {'oAuthToken' : self.internalAuthToken}}          
-        self.authObj['attributes'] = { 'oAuth' : { 'xmlns' : 'http://exacttarget.com' }}                        
+
+        self.authObj = {'oAuth' : {'oAuthToken' : self.internalAuthToken}}
+        self.authObj['attributes'] = { 'oAuth' : { 'xmlns' : 'http://exacttarget.com' }}
 
         self.soap_client = suds.client.Client(self.wsdl_file_url, faults=False, cachingpolicy=1)
         self.soap_client.set_options(location=self.endpoint)
@@ -163,13 +166,13 @@ class ET_Client(object):
         element_oAuth = Element('oAuth', ns=('etns', 'http://exacttarget.com'))
         element_oAuthToken = Element('oAuthToken').setText(self.internalAuthToken)
         element_oAuth.append(element_oAuthToken)
-        self.soap_client.set_options(soapheaders=(element_oAuth))               
-        
+        self.soap_client.set_options(soapheaders=(element_oAuth))
+
         security = suds.wsse.Security()
         token = suds.wsse.UsernameToken('*', '*')
         security.tokens.append(token)
-        self.soap_client.set_options(wsse=security)             
-        
+        self.soap_client.set_options(wsse=security)
+
 
     def refresh_token(self, force_refresh = False):
         """
@@ -187,31 +190,31 @@ class ET_Client(object):
 
             r = requests.post(self.auth_url, data=json.dumps(payload), headers=headers)
             tokenResponse = r.json()
-            
+
             if 'accessToken' not in tokenResponse:
                 raise Exception('Unable to validate App Keys(ClientID/ClientSecret) provided: ' + repr(r.json()))
-            
+
             self.authToken = tokenResponse['accessToken']
             self.authTokenExpiration = time.time() + tokenResponse['expiresIn']
             self.internalAuthToken = tokenResponse['legacyToken']
             if 'refreshToken' in tokenResponse:
                 self.refreshKey = tokenResponse['refreshToken']
-        
+
             self.build_soap_client()
-            
+
 
     def determineStack(self):
         """
         find the correct url that data request web calls should go against for the token we have.
         """
         try:
-            r = requests.get('https://www.exacttargetapis.com/platform/v1/endpoints/soap?access_token=' + self.authToken)           
+            r = requests.get('https://www.exacttargetapis.com/platform/v1/endpoints/soap?access_token=' + self.authToken)
             contextResponse = r.json()
             if('url' in contextResponse):
                 return str(contextResponse['url'])
 
         except Exception as e:
-            raise Exception('Unable to determine stack using /platform/v1/tokenContext: ' + e.message)  
+            raise Exception('Unable to determine stack using /platform/v1/tokenContext: ' + e.message)
 
 
     def AddSubscriberToList(self, emailAddress, listIDs, subscriberKey = None):
@@ -221,26 +224,26 @@ class ET_Client(object):
         newSub = ET_Subscriber()
         newSub.auth_stub = self
         lists = []
-        
+
         for p in listIDs:
             lists.append({"ID" : p})
-        
+
         newSub.props = {"EmailAddress" : emailAddress, "Lists" : lists}
         if subscriberKey is not None:
             newSub.props['SubscriberKey']  = subscriberKey
-        
+
         # Try to add the subscriber
         postResponse = newSub.post()
-        
+
         if not postResponse.status:
             # If the subscriber already exists in the account then we need to do an update.
-            # Update Subscriber On List 
-            if postResponse.results[0]['ErrorCode'] == 12014:    
+            # Update Subscriber On List
+            if postResponse.results[0]['ErrorCode'] == 12014:
                 patchResponse = newSub.patch()
                 return patchResponse
 
         return postResponse
-    
+
 
     def CreateDataExtensions(self, dataExtensionDefinitions):
         """
@@ -248,8 +251,8 @@ class ET_Client(object):
         """
         newDEs = ET_DataExtension()
         newDEs.auth_stub = self
-                
-        newDEs.props = dataExtensionDefinitions                     
-        postResponse = newDEs.post()        
-        
+
+        newDEs.props = dataExtensionDefinitions
+        postResponse = newDEs.post()
+
         return postResponse
