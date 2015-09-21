@@ -64,7 +64,7 @@ class ET_Constructor(object):
                     self.status = False
 
     def parse_props_dict_into_ws_object(self, obj_type, ws_object, props_dict):
-        for k, v in props_dict.iteritems():
+        for k, v in props_dict.items():
             if k in ws_object:
                 ws_object[k] = v
             else:
@@ -188,9 +188,9 @@ class ET_Get(ET_Constructor):
                 ws_retrieveRequest.Filter = ws_simpleFilterPart
 
         if options is not None:
-            for key, value in options.iteritems():
+            for key, value in options.items():
                 if isinstance(value, dict):
-                    for k, v in value.iteritems():
+                    for k, v in value.items():
                         ws_retrieveRequest.Options[key][k] = v
                 else:
                     ws_retrieveRequest.Options[key] = value
@@ -391,7 +391,7 @@ class ET_CUDSupport(ET_GetSupport):
 
     def post(self):
         if self.extProps is not None:
-            for k, v in self.extProps.iteritems():
+            for k, v in self.extProps.items():
                 self.props[k.capitalize] = v
 
         obj = ET_Post(self.auth_stub, self.obj_type, self.props)
@@ -432,7 +432,7 @@ class ET_GetSupportRest(ET_BaseObject):
         additionalQS = {}
 
         if self.props is not None and type(self.props) is dict:
-            for k, v in self.props.iteritems():
+            for k, v in self.props.items():
                 if k in self.urlProps:
                     completeURL = completeURL.replace('{{{0}}}'.format(k), v)
                 else:
@@ -506,7 +506,7 @@ class ET_CUDSupportRest(ET_GetSupportRest):
         completeURL = self.endpoint
 
         if self.props is not None and type(self.props) is dict:
-            for k, v in self.props.iteritems():
+            for k, v in self.props.items():
                 if k in self.urlProps:
                     completeURL = completeURL.replace('{{{0}}}'.format(k), v)
 
@@ -529,7 +529,7 @@ class ET_CUDSupportRest(ET_GetSupportRest):
                 raise "Unable to process request due to missing required prop: #{value}"
 
         if self.props is not None and type(self.props) is dict:
-            for k, v in self.props.iteritems():
+            for k, v in self.props.items():
                 if k in self.urlProps:
                     completeURL = completeURL.replace('{{{0}}}'.format(k), v)
 
@@ -544,7 +544,7 @@ class ET_CUDSupportRest(ET_GetSupportRest):
                 raise "Unable to process request due to missing required prop: #{value}"
 
         if self.props is not None and type(self.props) is dict:
-            for k, v in self.props.iteritems():
+            for k, v in self.props.items():
                 if k in self.urlProps:
                     completeURL = completeURL.replace('{{{0}}}'.format(k), v)
 
