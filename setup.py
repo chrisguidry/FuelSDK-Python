@@ -17,7 +17,7 @@ setup(
     install_requires=[
         'pyjwt>=0.3.2',
         'requests>=2.5.1',
-        'suds>=0.4',
+        'suds-jurko>=0.4.1.jurko.5',
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
