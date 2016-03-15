@@ -33,7 +33,7 @@ class ET_Client(object):
     auth_url = None
         
     ## get_server_wsdl - if True and a newer WSDL is on the server than the local filesystem retrieve it
-    def __init__(self, get_server_wsdl = False, debug = False, params = None):
+    def __init__(self, get_server_wsdl=False, debug=False, params=None, et_call_timeout=None):
         self.debug = debug
         if debug:
             logging.basicConfig(level=logging.INFO)
@@ -109,10 +109,10 @@ class ET_Client(object):
             self.internalAuthToken = decodedJWT['request']['user']['internalOauthToken']
             if 'refreshToken' in decodedJWT:
                 self.refreshKey = tokenResponse['request']['user']['refreshToken']
-            self.build_soap_client()
+            self.build_soap_client(timeout=et_call_timeout)
             pass
         else:
-            self.refresh_token()
+            self.refresh_token(timeout=et_call_timeout)
 
 
     def load_wsdl(self, wsdl_url, wsdl_file_local_location, get_server_wsdl = False):
@@ -150,14 +150,17 @@ class ET_Client(object):
         f.write(r.text)
         
 
-    def build_soap_client(self):
+    def build_soap_client(self, timeout=90):
         if self.endpoint is None: 
             self.endpoint = self.determineStack()
         
         self.authObj = {'oAuth' : {'oAuthToken' : self.internalAuthToken}}          
         self.authObj['attributes'] = { 'oAuth' : { 'xmlns' : 'http://exacttarget.com' }}                        
 
-        self.soap_client = suds.client.Client(self.wsdl_file_url, faults=False, cachingpolicy=1)
+        self.soap_client = suds.client.Client(self.wsdl_file_url,
+                                              faults=False,
+                                              cachingpolicy=1,
+                                              timeout=timeout)
         self.soap_client.set_options(location=self.endpoint)
 
         element_oAuth = Element('oAuth', ns=('etns', 'http://exacttarget.com'))
@@ -171,7 +174,7 @@ class ET_Client(object):
         self.soap_client.set_options(wsse=security)             
         
 
-    def refresh_token(self, force_refresh = False):
+    def refresh_token(self, force_refresh = False, timeout=None):
         """
         Called from many different places right before executing a SOAP call
         """
@@ -185,7 +188,7 @@ class ET_Client(object):
             if self.refreshKey:
                 payload['refreshToken'] = self.refreshKey
 
-            r = requests.post(self.auth_url, data=json.dumps(payload), headers=headers)
+            r = requests.post(self.auth_url, data=json.dumps(payload), headers=headers, timeout=timeout)
             tokenResponse = r.json()
             
             if 'accessToken' not in tokenResponse:
@@ -197,7 +200,7 @@ class ET_Client(object):
             if 'refreshToken' in tokenResponse:
                 self.refreshKey = tokenResponse['refreshToken']
         
-            self.build_soap_client()
+            self.build_soap_client(timeout=timeout)
             
 
     def determineStack(self):

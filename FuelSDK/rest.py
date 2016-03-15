@@ -2,7 +2,7 @@ import requests
 import json
 import copy
 
-    
+
 ########
 ##
 ##  Parent class used to determine what status we are in depending on web service call results
@@ -143,8 +143,8 @@ class ET_Configure(ET_Constructor):
 ##
 ########
 class ET_Get(ET_Constructor):
-    def __init__(self, auth_stub, obj_type, props = None, search_filter = None, options = None):        
-        auth_stub.refresh_token()
+    def __init__(self, auth_stub, obj_type, props=None, search_filter=None, options=None, timeout=None):
+        auth_stub.refresh_token(timeout=timeout)
         
         if props is None:   #if there are no properties to retrieve for the obj_type then return a Description of obj_type
             describe = ET_Describe(auth_stub, obj_type)
@@ -287,7 +287,7 @@ class ET_BaseObject(object):
 class ET_GetSupport(ET_BaseObject):
     obj_type = 'ET_GetSupport'   #should be overwritten by inherited class
     
-    def get(self, m_props = None, m_filter = None, m_options = None):
+    def get(self, m_props=None, m_filter=None, m_options=None, et_call_timeout=None):
         props = self.props
         search_filter = self.search_filter
         options = self.options
@@ -303,7 +303,7 @@ class ET_GetSupport(ET_BaseObject):
         if m_options is not None and type(m_filter) is dict:
             options = m_options
 
-        obj = ET_Get(self.auth_stub, self.obj_type, props, search_filter, options)
+        obj = ET_Get(self.auth_stub, self.obj_type, props, search_filter, options, timeout=et_call_timeout)
         if obj is not None:
             self.last_request_id = obj.request_id
         return obj
