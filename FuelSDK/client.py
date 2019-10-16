@@ -108,7 +108,7 @@ class ET_Client(object):
             self.authTokenExpiration = time.time() + decodedJWT['request']['user']['expiresIn']
             self.internalAuthToken = decodedJWT['request']['user']['internalOauthToken']
             if 'refreshToken' in decodedJWT:
-                self.refreshKey = decodedJWT['request']['user']['refreshToken']
+                self.refreshKey = decodedJWT['refreshToken']
             self.build_soap_client(timeout=et_call_timeout)
             pass
         else:
